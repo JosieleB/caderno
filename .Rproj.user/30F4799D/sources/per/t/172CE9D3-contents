@@ -1,0 +1,51 @@
+project:
+  type: website
+  output-dir: docs
+
+website:
+  title: "FIP 606"  # Título do seu site na barra de navegação
+  navbar:
+    left:
+      - href: index.qmd
+        text: Home
+      - text: "Software R"  # Texto principal do menu dropdown
+        menu:  # Indica que este é um menu dropdown
+          - text: "Download e interfaces"
+            href: primeiro.qmd
+          - text: "Pacotes"
+            href: pacotes.qmd
+          - text: "Carregando dados"
+            href: carregandodados.qmd
+
+      - text: "Gráficos"  # Gráficos como item da barra principal
+        href: graficos.qmd  # O link da página de gráficos
+      - text: "Testes estatísticos"  # Corrigido para "Testes estatísticos"
+        menu:  # Menu dropdown para Testes Estatísticos
+          - text: "Teste T"
+            href: testet.qmd
+          - text: "ANOVA de 1 Fator"
+            href: anova.qmd  # Link para ANOVA de 1 fator
+          - text: "ANOVA de 2 Fatores"
+            href: anova1.qmd  # Link para ANOVA de 2 fatores
+          - text: "Anova em delineamento em Parcelas Subdivididas"
+            href: dps.qmd
+          - text: "Teste não paramétricos"
+            href: testenp.qmd
+          - text: "Regressão"
+            href: regressao.qmd
+          - text: "Modelos mistos"
+            href: mm.qmd
+      - text: "Construindo mapas"
+        href: mapa.qmd
+
+    right:
+      - href: autora.qmd
+        text: "Autora"
+
+format:
+  html:
+    theme: journal  # Tema definido para 'journal'
+    css: styles.css  # Seu arquivo de estilos personalizados
+    toc: true  # Sumário habilitado para as páginas
+
+editor: visual  # Configura o editor padrão para o modo visual no RStudio/VS Code

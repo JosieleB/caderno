@@ -1,5 +1,23 @@
 {
   "index.qmd": {
     "index.html": "5a7a2d3e"
+  },
+  "anova.qmd": {
+    "anova.html": "4d4524bd"
+  },
+  "anova1.qmd": {
+    "anova1.html": "3aa5d4b5"
+  },
+  "autora.qmd": {
+    "autora.html": "8e2c9ebc"
+  },
+  "carregandodados.qmd": {
+    "carregandodados.html": "3ae76c40"
+  },
+  "dps.qmd": {
+    "dps.html": "e72c2ba7"
+  },
+  "graficos.qmd": {
+    "graficos.html": "a8d01e0d"
   }
 }
