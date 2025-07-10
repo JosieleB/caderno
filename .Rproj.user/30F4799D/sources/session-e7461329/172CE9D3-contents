@@ -3,11 +3,10 @@ project:
   output-dir: docs
 
 website:
-  title: "FIP 606"  # Título do seu site na barra de navegação
   navbar:
     left:
       - href: index.qmd
-        text: Home
+        text: FIP 606
       - text: "Software R"  # Texto principal do menu dropdown
         menu:  # Indica que este é um menu dropdown
           - text: "Download e interfaces"
