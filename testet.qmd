@@ -1,0 +1,275 @@
+---
+title: "Teste T"
+---
+
+O Teste T é utilizado para testar uma hipótese sobre uma média populacional. Os requisitos para a utilização do Teste T são: método de seleção amostral aleatória, uma amostra com distribuição normal (paramétrica) e cuja variável a ser analisada é quantitativa. O Teste T é robusto contra um afastamento da normalidade, portanto, deve ser utilizado somente em amostras com distribuição paramétrica.
+
+[Resumo Teste T]{.underline}
+
+| Teste | Distribuição | Grupos | Depedência | Resquisitos |
+|----|----|----|----|----|
+| T pareado | Paramétrico | 2 | Dependentes | Variâncias desconhecidas |
+| T para duas amostras | Paramétrico | 2 | Independentes | Variâncias iguais |
+| T para 2 amostras com variâncias diferentes | Paramétrico | 2 | Independentes | Variâncias diferentes |
+
+💡**Lembrete**
+
+***Variável Independente**: É a variável que o pesquisador manipula ou divide os grupos para observar seu efeito sobre a variável dependente. Exemplo: o pesquisador manipula o tipo de fertilizante que será aplicado às plantas para observar como isso afeta seu crescimento.*
+
+***Variável Dependente**: É a variável que é medida para observar o efeito das mudanças na variável independente. Exemplo: o crescimento das plantas é a variável que será medida para observar o efeito dos diferentes tipos de fertilizantes.*
+
+### Teste T com com variáveis independentes
+
+Pacotes que ainda não foram usados neste site e precisam ser instalados
+
+```{r, echo=TRUE, eval=FALSE}
+install.packages("rstatix")
+install.packages("report")
+install.packages("ggpubr")
+
+```
+
+```{r, message=FALSE, warning=FALSE}
+
+library(ggplot2)
+library(gsheet)
+library(tidyverse)
+
+dat_mg <- gsheet2tbl("https://docs.google.com/spreadsheets/d/1bq2N19DcZdtax2fQW9OHSGMR0X2__Z9T/edit?gid=983033137#gid=983033137")
+
+# Visualizando os dados com um gráfico de dispersão
+dat_mg |> 
+  ggplot(aes(trat, comp)) +
+  geom_jitter(width = 0.1)
+```
+
+#### Realizando o Teste T
+
+Agora, vamos realizar o Teste T para comparar os tratamentos. Primeiro, veremos os dados em formato largo e depois aplicaremos o teste para comparar os tratamentos control e Mg2.
+
+```{r, message=FALSE, warning=FALSE}
+
+dat_mg2 <- dat_mg |> 
+  pivot_wider(names_from = trat, values_from = comp) |>  # Transformando os dados de "long" para "wide"
+  dplyr::select(-rep)  # Removendo a coluna "rep"
+
+
+head(dat_mg2)
+
+
+```
+
+#### Teste T para comparação de médias
+
+Agora, aplicamos o Teste T para comparar as médias dos tratamentos control e Mg2.
+
+```{r, message=FALSE, warning=FALSE}
+
+attach(dat_mg2)  # Facilitando o acesso às colunas dos dados
+t_results <- t.test(control, Mg2)  # Comparando as duas condições
+t_results
+
+```
+
+#### Explicando os resultados
+
+```{r, message=FALSE, warning=FALSE}
+library(report)
+
+# Explicando os resultados do Teste T
+report(t_results)
+```
+
+O pacote **`report`** gera uma explicação detalhada sobre o resultado do teste, incluindo o valor p e as conclusões.
+
+#### Realizando o Teste T no formato longo
+
+Agora, vamos realizar o Teste T no formato longo dos dados, utilizando o pacote **`rstatix`**.
+
+```{r, message=FALSE, warning=FALSE}
+library(rstatix)
+
+# Realizando o Teste T no formato longo
+test <- t_test(comp ~ trat, data = dat_mg)
+test
+
+```
+
+O `rstatix` é um pacote para facilitar a realização de análises estatísticas no R, com uma sintaxe simples e intuitiva. Ele oferece funções para realizar testes estatísticos comuns (como t-test, ANOVA, correlação), análise de variância, testes de normalidade, entre outros, além de simplificar a forma como os resultados são apresentados.
+
+#### Gráfico de Boxplot
+
+Utilizando o pacote `ggpubr`, vamos criar um boxplot para visualizar as diferenças entre os tratamentos control e Mg2, incluindo o valor p manualmente.
+
+```{r, message=FALSE, warning=FALSE}
+library(ggpubr)
+
+# Criando o gráfico de boxplot
+p <- ggboxplot(
+  dat_mg, x = "trat", y = "comp",
+  color = "trat", palette = "jco"
+)
+print(p)
+
+# Adicionando o valor p manualmente no gráfico
+p + stat_pvalue_manual(test, label = "p", y.position = 18) +
+  ylim(0, 20) +
+  labs(x = "Tratamento", y = "Comprimento (mm)")
+
+# Salvando o gráfico como imagem
+ggsave("plot2.png", bg = "white")
+
+
+```
+
+O pacote `ggpubr` fornece algumas funções fáceis de usar para criar e personalizar gráficos prontos para publicação baseados em `ggplot2.`
+
+#### Testando a normalidade dos dados
+
+Antes de realizar o Teste T, é importante verificar a normalidade dos dados. Vamos usar o Teste de **Shapiro-Wilk** para testar se os dados seguem uma distribuição normal.
+
+```{r, message=FALSE, warning=FALSE}
+library(rstatix)
+# Realizando o teste de normalidade de Shapiro-Wilk para cada grupo
+shapiro.test(Mg2)
+shapiro.test(control)
+
+# Criando histogramas para visualizar a distribuição
+hist(Mg2)
+hist(control)
+
+```
+
+*O teste de **Shapiro-Wilk** é um teste de hipóteses que avalia se um conjunto de dados é normalmente distribuído. Ele avalia dados de uma amostra com a hipótese nula de que o conjunto de dados é normalmente distribuído. Um valor de p alto indica que o conjunto de dados é normalmente distribuído, enquanto um valor de p baixo indica que ele não é normalmente distribuído.*
+
+#### Teste de homogeneidade de variâncias
+
+Por fim, vamos testar se as variâncias entre os dois grupos são homogêneas utilizando o **Teste F**.
+
+```{r, message=FALSE, warning=FALSE}
+var.test(dat_mg2$Mg2, dat_mg2$control)  # Teste de variâncias
+
+
+```
+
+*O **Teste F** é utilizado principalmente para testar a igualdade de variâncias entre dois ou mais grupos. Ele é uma ferramenta essencial em diversas análises estatísticas, especialmente antes de realizar testes como o Teste T, que exige que as variâncias dos grupos sejam homogêneas (iguais).*
+
+*Atenção: caso as variâncias não sejam homogêneas, o parâmetro `var.equal = FALSE` deve ser utilizado dentro do Teste T.*
+
+### **Realizando o Teste T** com váriaveis dependentes
+
+```{r}
+ library(gsheet)
+
+# Carregando os dados da planilha do Google
+escala <- gsheet2tbl("https://docs.google.com/spreadsheets/d/1bq2N19DcZdtax2fQW9OHSGMR0X2__Z9T/edit?gid=1729131173#gid=1729131173")
+```
+
+Agora, vamos realizar o Teste T Pareado para comparar a acurácia entre as duas condições de avaliação (Unaided e Aided1). Usaremos o parâmetro `paired = TRUE` para indicar que as amostras são pareadas, e `var.equal = FALSE` para não assumir que as variâncias dos dois grupos são iguais.
+
+```{r, message=FALSE, warning=FALSE}
+library(rstatix)
+test <- t_test(acuracia ~ assessment,
+       data = escala,
+       paired = TRUE,
+       var.equal = FALSE)
+test
+```
+
+#### Visualizando a Distribuição com Boxplot
+
+A seguir, vamos visualizar a distribuição das acurácias nas diferentes condições de avaliação usando um gráfico de boxplot:
+
+```{r, message=FALSE, warning=FALSE}
+library(ggplot2)
+escala |> 
+  ggplot(aes(assessment, acuracia)) +
+         geom_boxplot()
+
+```
+
+#### Filtrando os dados para cada condição
+
+Vamos agora separar os dados para as duas condições de avaliação: "Unaided" (sem auxílio) e "Aided1" (com auxílio). Em seguida, extraímos os valores de acurácia para cada uma.
+
+```{r, message=FALSE, warning=FALSE}
+
+unaided <- escala |> 
+  filter(assessment == "Unaided") |> 
+  select(acuracia) |> 
+  pull()
+unaided
+
+
+aided <- escala |> 
+  filter(assessment == "Aided1") |> 
+  select(acuracia) |> 
+  pull()
+aided
+```
+
+#### Testando a igualdade de variâncias
+
+Antes de aplicar o Teste T, é importante verificar se as variâncias entre os dois grupos são iguais. Vamos usar o Teste F para testar essa hipótese:
+
+```{r, message=FALSE, warning=FALSE}
+# Testando a igualdade de variâncias entre os dois grupos usando o teste F
+var.test(unaided, aided)
+```
+
+#### Visualizando a distribuição com histogramas
+
+A seguir, vamos visualizar as distribuições das acurácias para ambas as condições usando histogramas. Isso nos ajudará a entender a forma das distribuições.
+
+```{r, message=FALSE, warning=FALSE}
+hist(unaided)  
+hist(aided)    
+
+```
+
+#### Testando a normalidade dos dados
+
+```{r, message=FALSE, warning=FALSE}
+# Realizando o teste de normalidade de Shapiro-Wilk para cada grupo
+shapiro.test(unaided)
+shapiro.test(aided)
+
+```
+
+#### Aplicando o Teste T
+
+Com os dados sendo normais e as variâncias sendo testadas, podemos aplicar o Teste T Pareado para comparar as duas condições.
+
+```{r, message=FALSE, warning=FALSE}
+# Realizando o teste t pareado para comparar as duas condições
+# Este teste é usado para dados com distribuição normal e variâncias homogêneas
+t.test(unaided, aided, paired = TRUE, var.equal = FALSE)
+
+```
+
+#### Teste Não Paramétrico de Wilcoxon
+
+Caso os dados não atendam aos pressupostos do Teste T (como a normalidade), podemos usar o **Teste de Wilcoxon** como uma alternativa não paramétrica.
+
+```{r, message=FALSE, warning=FALSE}
+wilcox.test(unaided, aided)
+
+```
+
+O *teste de postos com sinais de **Wilcoxon** é um teste nao-paramétrico que usa os postos de dados amostrais compostos de pares combinados. É usado pra testar diferenças nas distribuições populacionais, de modo que as hipóteses nula e alternativa são:*
+
+-   *Ho : as duas amostras provém de populações com a mesma distribuição.*
+
+-   *H1: as duas amostras provém de populações com distribuições diferentes.*
+
+#### Teste de Mann-Whitney para Grupos Independentes
+
+Se quisermos comparar duas amostras independentes, podemos utilizar o **Teste de Mann-Whitney**. Aqui, as condições "Unaided" e "Aided1" são tratadas como grupos independentes.
+
+```{r, message=FALSE, warning=FALSE}
+# Aqui, 'paired = FALSE' é usado porque estamos comparando grupos independentes
+wilcox.test(unaided, aided, paired = FALSE)
+
+```
+
+*O **Teste de Mann-Whitney** é um teste estatístico não paramétrico usado para comparar as medianas de dois grupos independentes. Ele é uma alternativa ao Teste T quando os dados não seguem uma distribuição normal.*

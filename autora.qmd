@@ -1,0 +1,20 @@
+---
+title: "Josiele Broêtto"
+subtitle: "Engenheira Agronôma | Mestranda em Entomologia"
+image: "ftpr1.jpg"
+toc: false
+about: 
+  template: jolla
+  image-shape: round
+  image-width: 18em
+  links:
+    - text: LinkedIn
+      href: https://www.linkedin.com/in/josiele-broetto
+    - text: GitHub
+      href: https://github.com/josieleb
+      icon: github
+---
+
+## **Sobre mim**
+
+Natural do Espírito Santo, cresci em um ambiente rural, o que me proporcionou uma convivência diária com a agricultura. Durante minha graduação, concentrei meus estudos na área de ecotoxicologia dentro da Entomologia, desenvolvendo uma experiência prática significativa em culturas como café, cana-de-açúcar, milho e tomate

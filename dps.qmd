@@ -1,0 +1,95 @@
+---
+title: "Anova em delineamento de Parcelas Subdivididas"
+---
+
+O Delineamento em Parcelas Subdivididas (ou Split-Plot Design) é um tipo de plano experimental utilizado para estudar múltiplos fatores em um experimento, onde os fatores têm níveis distintos e são manipulados de maneira hierárquica, ou seja, um fator é manipulado em um nível maior (parcela principal) e o outro fator é manipulado em níveis menores (parcelas subdivididas). Este tipo de delineamento é frequentemente utilizado em experimentos agrícolas, industriais e experimentos de campo, quando há limitações de tempo, espaço ou recursos para realizar todos os tratamentos de forma independente.
+
+```{r, hide=TRUE, echo=FALSE}
+options(repos = c(CRAN = "https://cran.rstudio.com/"))
+```
+
+```{r, message=FALSE, warning=FALSE}
+library(ggplot2)
+library(dplyr)
+library(DHARMa)
+library(multcomp)
+
+# Carregar os dados da nuvem
+library(gsheet)
+milho <- gsheet2tbl ("https://docs.google.com/spreadsheets/d/1bq2N19DcZdtax2fQW9OHSGMR0X2__Z9T/edit?gid=1345524759#gid=1345524759")
+
+# Visualizando os dados: gráfico de dispersão com 'hybrid' no eixo X, 'index' no eixo Y e cores diferenciadas por 'method'
+milho |> 
+  ggplot(aes(hybrid, index, color = method)) + 
+  geom_jitter(width = 0.1) +          # Adiciona dispersão nos pontos para facilitar a visualização
+  coord_flip() +                      # Inverte os eixos X e Y
+  facet_wrap(~ method)                # Cria facetas (subgráficos) para cada valor de 'method'
+
+# Instalar e carregar o pacote lme4 para usar modelos mistos
+install.packages("lme4") 
+library(lme4)
+
+# Criando a variável de interação entre 'hybrid' e 'block'
+milho$hybrid_block <- interaction(milho$hybrid, milho$block)  # Cria uma nova variável que representa a interação entre híbrido e bloco
+
+# Outra forma de criar a interação 'hybrid' e 'block'
+milho |> 
+  mutate(hybrid_block = interaction(hybrid, block)) # Criação da interação com mutate, que também adiciona essa variável ao dataframe
+
+# Ajustando o modelo misto para analisar 'index' com os fatores 'hybrid' e 'method', considerando blocos como um efeito aleatório
+m_milho <- lmer(index ~ hybrid * method + 
+                (1 | block:hybrid_block),  # Bloco dentro da interação híbrido-bloco
+                data = milho)
+
+# Exibindo a ANOVA do modelo
+car::Anova(m_milho)  # 'car::Anova' é usado para uma ANOVA mais detalhada com modelos lineares e mistos
+
+# Visualizando os resíduos do modelo para verificar a normalidade e homogeneidade das variâncias
+plot(simulateResiduals(m_milho))  # Usando DHARMa para verificar os resíduos do modelo
+
+# Estimativas das médias ajustadas para cada 'hybrid' dentro de cada 'method'
+library(emmeans)  # Pacote para estimativas de médias ajustadas
+media_milho <- emmeans(m_milho, ~ hybrid | method)  # Calculando as médias ajustadas para 'hybrid' dentro de cada 'method'
+cld(media_milho, Letters = letters)  # Exibindo as comparações de médias com as letras compactas
+
+# Decompondo as médias por 'method' dentro de cada 'hybrid'
+media_milho2 <- emmeans(m_milho, ~ method | hybrid)  # Calculando as médias ajustadas para 'method' dentro de cada 'hybrid'
+cld(media_milho2, Letters = letters)  # Exibindo as comparações de médias
+
+# Realizando a análise com a ANOVA sem considerar o modelo de parcelas subdivididas (não recomendado)
+m_milho3 <- lm(index ~ hybrid * method + block, data = milho)  # Modelo linear simples, sem efeito aleatório
+plot(simulateResiduals(m_milho3))  # Visualizando os resíduos para este modelo simplificado
+
+# Agora, analisando a produtividade (yield) em vez do índice
+m_milho <- lmer(yield ~ hybrid * method + 
+                (1 | block:hybrid_block),  # Mantendo a interação entre blocos e híbridos
+                data = milho)
+
+# Exibindo a ANOVA para o modelo de produtividade
+car::Anova(m_milho)  # Exibe a ANOVA para o modelo ajustado
+
+# Visualizando os resíduos para verificar os pressupostos da ANOVA
+plot(simulateResiduals(m_milho))  # Checando os resíduos para produtividade
+
+# Estimativas das médias ajustadas para 'hybrid' dentro de 'method' para a produtividade
+media_milho <- emmeans(m_milho, ~ hybrid | method)
+cld(media_milho, Letters = letters)  # Exibindo as comparações entre os híbridos
+
+# Estimativas das médias ajustadas para 'method' dentro de 'hybrid' para a produtividade
+media_milho2 <- emmeans(m_milho, ~ method | hybrid)
+cld(media_milho2, Letters = letters)  # Exibindo as comparações entre os métodos
+
+# Analisando a relação entre índice e produtividade (doença e produtividade)
+milho |> 
+  ggplot(aes(index, yield)) + 
+  geom_point() +            # Gráfico de dispersão entre índice e produtividade
+  geom_smooth(method = "lm")  # Adicionando a linha de tendência com o modelo linear
+
+# Análise de correlação entre 'index' (índice de doença) e 'yield' (produtividade)
+cor.test(milho$index, milho$yield)  # Testando a correlação entre o índice de doença e a produtividade
+
+# Calculando o coeficiente de correlação e o coeficiente de determinação (R^2)
+cor1 <- cor(milho$index, milho$yield)  # Calculando o coeficiente de correlação
+cor1 * cor1 * 100  # Calculando o coeficiente de determinação (R^2), que mostra a variação de 'yield' explicada por 'index'
+
+```

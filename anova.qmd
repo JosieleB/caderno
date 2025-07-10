@@ -1,0 +1,151 @@
+---
+title: "Anova"
+---
+
+Quando você precisa comparar as médias de três ou mais grupos, a Análise de Variância (ANOVA) é a ferramenta estatística ideal. Para que a ANOVA seja aplicada corretamente, seus dados precisam atender aos seguintes critérios:
+
+-   As amostras devem seguir uma distribuição paramétrica (geralmente normal).
+
+-   As amostras devem ser aleatórias e independentes (os dados de um grupo não devem influenciar os outros).
+
+-   As populações de onde as amostras foram retiradas devem ter variâncias semelhantes.
+
+Dentro da ANOVA, os tipos mais comuns são a de um fator e a de dois fatores, dependendo de quantas variáveis você está investigando ao mesmo tempo.
+
+-   **ANOVA de um Fator**: É usada quando você compara grupos com base em apenas uma característica.
+
+    Exemplo: Suponha que um pesquisador queira comparar a mortalidade de uma praga (ex: mosca-branca) após a aplicação de três diferentes tipos de inseticidas (Inseticida A, Inseticida B e Inseticida C). A ANOVA de um fator ajudaria a determinar se há uma diferença significativa na mortalidade da praga entre os inseticidas testados.
+
+-   **ANOVA de Dois Fatores**: É usada quando você compara grupos com base em duas características ao mesmo tempo.
+
+    Exemplo: Imagine que você quer analisar o número de ovos depositados por uma lagarta em diferentes cultivares de soja (Cultivar 1, Cultivar 2) e também considerar a temperatura ambiente (25°C, 30°C). A ANOVA de dois fatores permitiria analisar o efeito combinado da cultivar e da temperatura no número de ovos depositados pela lagarta.
+
+#### Interpretação do P-valor na ANOVA
+
+Na ANOVA, se o **P-valor for igual ou menor que 0,05** (um nível de significância comum de α=0,05), você rejeita a hipótese nula (que todas as médias populacionais são iguais) e conclui que pelo menos uma das médias é diferente das outras. Isso significa que há uma diferença estatisticamente significativa entre os grupos que você está comparando.
+
+Se o **P-valor for maior que 0,05**, você aceita a hipótese nula, o que indica que não há evidências suficientes para dizer que as médias populacionais são diferentes. Nesse caso, a diferença observada entre as médias dos seus grupos é provavelmente devido ao acaso.
+
+Pacotes que ainda não foram usados neste site e precisam ser instalados
+
+```{r, echo=TRUE, eval=FALSE}
+install.packages("emmeans")
+install.packages("multcomp")
+
+```
+
+```{r, message=FALSE, warning=FALSE}
+library(gsheet)
+library(ggplot2)
+
+micelial <- gsheet2tbl ("https://docs.google.com/spreadsheets/d/1bq2N19DcZdtax2fQW9OHSGMR0X2__Z9T/edit?gid=959387827#gid=959387827")
+
+# Visualizando os dados com um gráfico de boxplot
+micelial |> 
+  ggplot(aes(especie, tcm)) +
+  geom_boxplot(outlier.colour = NA) + # Removendo os outliers do boxplot
+  geom_jitter() # Adicionando pontos para visualização
+```
+
+#### Realizando a ANOVA com um fator
+
+Agora, vamos realizar a ANOVA para testar se existe uma diferença significativa entre as médias de tcm para diferentes especies.
+
+```{r, message=FALSE, warning=FALSE}
+library(rstatix)
+anova1 <- aov(tcm ~ especie, data = micelial)
+anova1
+
+```
+
+Alternativamente, podemos realizar a ANOVA utilizando a função **`lm()`**, que também realiza uma análise de regressão linear. O resultado será o mesmo.
+
+```{r, message=FALSE, warning=FALSE}
+# ANOVA utilizando a regressão linear
+anova2 <- lm(tcm ~ especie, data = micelial)
+anova2
+
+# Comparando os resultados da ANOVA
+anova(anova1)
+anova(anova2)
+
+```
+
+A função **`anova()`** mostra a tabela de ANOVA com os valores de F e p, que nos ajudam a verificar se a diferença entre as médias é significativa.
+
+#### Verificando os Resíduos
+
+Antes de interpretar os resultados da ANOVA, precisamos verificar se os pressupostos de normalidade e homogeneidade das variâncias são atendidos. Para isso, vamos analisar os resíduos da ANOVA.
+
+```{r, message=FALSE, warning=FALSE}
+# Obtendo os resíduos da ANOVA
+residuals(anova1) 
+
+# Visualizando os resíduos em um histograma
+hist(residuals(anova1))
+
+# Realizando o teste de normalidade de Shapiro-Wilk nos resíduos
+shapiro.test(residuals(anova1))
+
+```
+
+Quando o valor de p for maior que 0,05 no teste de Shapiro-Wilk, podemos concluir que os resíduos são normalmente distribuídos.
+
+#### Testando a Homogeneidade das Variâncias
+
+A ANOVA pressupõe que as variâncias dos grupos sejam homogêneas. Podemos testar isso de duas maneiras: utilizando o **Teste de Bartlett** ou o **Teste de Levene**.
+
+```{r, message=FALSE, warning=FALSE}
+# Teste de Bartlett para homogeneidade de variâncias
+bartlett.test(tcm ~ especie, data = micelial)
+
+# Teste de Levene para homogeneidade de variâncias
+levene_test(tcm ~ especie, data = micelial)
+
+```
+
+Ambos os testes verificam se as variâncias dos grupos são iguais. Se o valor p for maior que 0,05, as variâncias podem ser consideradas homogêneas.
+
+*O **Teste de Bartlett** verifica a homogeneidade das variâncias e é mais eficaz quando os dados seguem uma distribuição normal. Ele tem maior poder para identificar diferenças nas variâncias quando a normalidade é atendida.*
+
+*\
+O **Teste de Levene** também testa a homogeneidade das variâncias, mas é mais confiável em casos de desvios da normalidade. Ele é ideal para quando os dados não seguem uma distribuição normal perfeita.*
+
+### Realizando Contrastes e Estimativas de Médias
+
+Após a ANOVA, podemos realizar contrastes para comparar as médias entre os grupos utilizando o pacote `emmeans`.
+
+```{r, message=FALSE, warning=FALSE}
+# Carregando o pacote 'emmeans' para contrastes
+library(emmeans)
+
+# Realizando os contrastes das médias
+m <- emmeans(anova2, ~ especie)
+m
+
+```
+
+O pacote **emmeans()** permite que você calcule médias ajustadas para as variáveis de interesse, com base no modelo estimado. O pacote também permite que você faça comparações entre médias ajustadas usando contrastes, que podem incluir comparações múltiplas ou post-hoc (para analisar mais detalhadamente onde estão as diferenças entre os grupos). Ele também calcula intervalos de confiança para as médias ajustadas, permitindo uma compreensão mais detalhada da variabilidade dos dados.
+
+#### Comparações Múltiplas (Post-Hoc)
+
+Se a ANOVA indicar que existem diferenças significativas, podemos realizar comparações múltiplas para identificar quais grupos são diferentes entre si. O pacote **`multcomp`** é utilizado para essas comparações.
+
+```{r, message=FALSE, warning=FALSE}
+# Carregando o pacote 'multcomp'
+library(multcomp)
+
+# Realizando comparações múltiplas
+cld(m)  # Mostra as letras compactas (grupos que são semelhantes)
+
+# Realizando comparações pareadas
+pairs(m)
+
+# Fazendo uma matriz de resultados
+pwpm(m)
+
+```
+
+O pacote **`multcomp`** é utilizado para realizar **comparações múltiplas** (post-hoc) após modelos lineares ou ANOVA. Ele ajuda a comparar as médias de diferentes grupos, ajustando para múltiplas comparações e controlando o erro tipo I.
+
+A função `cld()` exibe as letras compactas, que indicam quais grupos são significativamente diferentes. As comparações pareadas são feitas com a função `pairs()`, e a função `pwpm()` gera uma matriz de resultados.

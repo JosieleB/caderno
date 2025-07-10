@@ -1,0 +1,48 @@
+---
+title: "Modelos mistos"
+---
+
+Um modelo misto é utilizado quando temos tanto efeitos fixos quanto efeitos aleatórios. Efeitos fixos são os efeitos que se aplicam a toda a população (como os tratamentos ou variáveis que são constantes em todos os grupos), enquanto efeitos aleatórios são as variações que ocorrem devido a fatores não controlados (como a variação entre blocos ou experimentos).
+
+-   Efeito fixo: Tratamento (trat)
+
+-   Efeito aleatório: Experimento (exp) e Bloco (bloco), onde os blocos estão dentro dos experimentos.
+
+Agora vamos ver como isso é aplicado no código:
+
+```{r, message=FALSE, warning=FALSE}
+library(gsheet)
+estande <-  gsheet2tbl ("https://docs.google.com/spreadsheets/d/1bq2N19DcZdtax2fQW9OHSGMR0X2__Z9T/edit?gid=401662555#gid=401662555")
+
+library(lme4)
+
+# Ajustando o modelo misto
+m_misto <- lmer(nplants ~ trat + (1  | exp/bloco), 
+                data = estande)
+
+# Intervalos de confiança para os efeitos aleatórios
+confint(m_misto)
+
+# Sumário do modelo ajustado
+summary(m_misto)
+
+# Realizando a ANOVA do modelo misto
+library(car)
+car::Anova(m_misto)
+
+# O p-valor foi significativo
+
+
+```
+
+```{r, message=FALSE, warning=FALSE}
+library(ggplot2)
+estande |> 
+  ggplot(aes(trat, nplants, color = factor(exp))) +
+  geom_point() +  # Adiciona os pontos de dados
+  # geom_smooth(method = "lm", se = FALSE) +  # Linha de tendência (comentada)
+  geom_abline(intercept = 69.74, slope = -0.56, linewidth = 2) +  # Linha de interceptação
+  geom_abline(intercept = 43, slope = -0.73, linetype = "dashed") +  # Linha para outra interceptação
+  geom_abline(intercept = 96, slope = -0.40, linetype = "dashed")    # Linha para outra interceptação
+
+```

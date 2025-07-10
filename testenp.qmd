@@ -1,0 +1,157 @@
+---
+title: "Testes Não Paramétricos"
+---
+
+Quando os dados não seguem uma distribuição normal, ou quando não podemos assumir variâncias homogêneas entre os grupos, é necessário recorrer a testes não paramétricos. Esses testes não dependem de pressupostos fortes sobre a distribuição dos dados, o que os torna uma escolha ideal para situações em que as condições para análises paramétricas, como a ANOVA, não são atendidas.
+
+Pacotes que ainda não foram usados neste site e precisam ser instalados
+
+```{r, echo=TRUE, eval=FALSE}
+install.packages("agricolae") 
+install.packages("lme4") 
+install.packages("performance") 
+install.packages("report")
+
+
+```
+
+### os dados não são normais, o que eu faço?
+
+Primeiro, precisamos verificar se os dados seguem uma distribuição normal. Se não, podemos usar transformações ou recorrer a testes não paramétricos. Vamos ver como verificar a normalidade e como proceder:
+
+```{r, message=FALSE, warning=FALSE}
+# Carregando os dados do pacote InsectSprays
+library(agricolae)
+library(ggplot2)
+insetos <- InsectSprays
+View(insetos)
+
+# Visualizando os dados com um gráfico de boxplot e jitter
+insetos |> 
+  ggplot(aes(spray, count)) +
+  geom_boxplot(outlier.color = NA) +   # Removendo outliers no boxplot
+  geom_jitter(width = 0.1)             # Adicionando dispersão nos pontos
+
+# Ajustando um modelo linear para verificar o efeito do tipo de spray no número de insetos mortos
+m2 <- lm(count ~ spray, data = insetos) 
+
+# Verificando os resíduos do modelo
+hist(residuals(m2))  # Histograma dos resíduos
+shapiro.test(residuals(m2))  # Teste de normalidade de Shapiro-Wilk
+
+# Teste de Bartlett para verificar se as variâncias são homogêneas
+bartlett.test(count ~ spray, data = insetos)
+
+# Verificando visualmente se os resíduos seguem uma distribuição normal
+qqnorm(residuals(m2))  # Q-Q plot para os resíduos
+qqline(residuals(m2))   # Linha de referência no Q-Q plot
+
+
+```
+
+Se os dados não atenderem aos pressupostos de normalidade ou homocedasticidade, podemos aplicar transformações nos dados ou usar testes não paramétricos.
+
+### Alternativa 1 - Transformação dos Dados
+
+Uma opção para lidar com dados não normais é transformar os dados. Uma transformação comum é a raiz quadrada, que pode ajudar a normalizar a distribuição dos dados.
+
+```{r, message=FALSE, warning=FALSE}
+library(report)
+library(emmeans)
+library(multcomp)
+# Aplicando transformação de raiz quadrada nos dados
+m3 <- lm(sqrt(count) ~ spray, data = insetos)
+
+# Teste de normalidade nos resíduos após transformação
+shapiro.test(residuals(m3))
+hist(residuals(m3))   # Visualização da distribuição dos resíduos
+qqnorm(residuals(m3))  # Q-Q plot dos resíduos
+qqline(residuals(m3))   # Linha de referência no Q-Q plot
+
+# Teste de Bartlett para homogeneidade de variâncias após transformação
+bartlett.test(sqrt(count) ~ spray, data = insetos)
+
+# Realizando ANOVA no modelo transformado
+anova(m3)
+
+# Relatório do modelo ajustado
+report(m3)
+
+# Estimando médias ajustadas e destransformando os resultados
+m33 <- emmeans(m3, ~ spray, type = "response")  # Desfazendo a transformação
+plot(m33)
+cld(m33)  # Comparações de médias ajustadas entre os grupos
+
+```
+
+### Alternativa 2 - Testes Não Paramétricos
+
+Quando os dados não podem ser transformados para normalizar sua distribuição, a solução é recorrer a testes não paramétricos. Um dos testes mais comuns para comparação de medianas entre dois ou mais grupos é o Teste de Kruskal-Wallis.
+
+```{r, message=FALSE, warning=FALSE}
+# Teste de Kruskal-Wallis para comparar os grupos
+kruskal.test(count ~ spray, data = insetos)
+
+# Utilizando o pacote agricolae para comparações pós-hoc entre os grupos
+library(agricolae)
+kruskal(insetos$count, insetos$spray, group = TRUE, console = TRUE)
+
+```
+
+*O teste de Kruskal-Wallis é o equivalente não paramétrico da ANOVA e é utilizado quando os dados são ordinais ou não atendem às suposições de normalidade. Ele verifica se existem diferenças significativas entre as medianas dos grupos. Após esse teste, se for detectada diferença, realizamos comparações múltiplas para entender quais grupos são significativamente diferentes.*
+
+### Alternativa 3 - Modelos Lineares Generalizados (GLM)
+
+Se preferirmos continuar com uma abordagem paramétrica, mas nossos dados não atenderem às suposições da ANOVA, podemos usar Modelos Lineares Generalizados (GLM). Por exemplo, para dados de contagem, podemos usar a distribuição de Poisson.
+
+```{r, message=FALSE, warning=FALSE}
+library(DHARMa)
+# Ajustando um modelo de Poisson para dados de contagem
+m2.3 <- glm(count ~ spray, data = insetos, family = poisson)
+
+# Exibindo a ANOVA para o modelo de Poisson
+anova(m2.3)
+
+# Usando o pacote car para uma ANOVA mais detalhada
+library(car)
+Anova(m2.3)
+
+# Verificando os resíduos do modelo de Poisson
+plot(simulateResiduals(m2.3))
+
+# Estimativas de médias ajustadas para o modelo de Poisson
+medias_m2.3 <- emmeans(m2.3, ~ spray, type = "response")
+medias_m2.3
+cld(medias_m2.3)
+
+```
+
+O GLM com distribuição de Poisson é adequado para dados de contagem, como o número de insetos mortos por tipo de spray. Esse modelo é mais flexível que a ANOVA e pode lidar com dados de contagem de forma eficiente.
+
+## Box-Cox
+
+### O que é o Box-Cox?
+
+O **Box-Cox** é uma técnica de transformação de dados que busca estabilizar a variância e transformar os dados para aproximá-los de uma distribuição normal. Ele permite que você teste diferentes valores de lambda para encontrar a transformação ideal.
+
+```{r, message=FALSE, warning=FALSE}
+# Aplicando o Box-Cox para encontrar o melhor valor de lambda
+
+boxcox(lm(insetos$count+0.1 ~1))  # Adicionando 0.1 para garantir que os valores são positivos
+b <- boxcox(lm(insetos$count+0.1 ~1))
+
+# Encontrando o valor de lambda que maximiza a função de verossimilhança
+lambda <- b$x[which.max(b$y)] 
+lambda
+
+# Transformando os dados com o valor de lambda obtido
+library(tidyverse) 
+insetos <- insetos |> 
+  mutate(count2 = (count^lambda - 1)/lambda) |> 
+  mutate(count3 = (sqrt(count))) 
+
+# Visualizando o histograma da variável transformada
+hist(insetos$count2)
+
+
+```

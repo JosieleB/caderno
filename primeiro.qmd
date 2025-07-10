@@ -1,0 +1,33 @@
+---
+title: "Dowload e interfaces"
+---
+
+### **Dowload**
+
+O R é um ambiente de software livre para computação estatística. Você pode conhecer o software e realizar seu dowload em: [`https://www.r-project.org/`](https://www.r-project.org/){.uri}
+
+### RStudio
+
+O RStudio se trata de uma interface intuitiva para utilização do R.
+
+Ele é essencial porque facilita muito a vida de quem programa em R. Em vez de lidar com várias janelas e ferramentas separadas, o RStudio reúne tudo o que você precisa em um só lugar: onde você escreve seu código, onde vê os resultados, onde explora seus dados e até onde visualiza seus gráficos.
+
+Dowload RStudio: [`https://posit.co/download/rstudio-desktop/`](https://posit.co/download/rstudio-desktop/)
+
+### Como começar um Projeto no RStudio:
+
+1.  Abra o RStudio.
+
+2.  Vá em File \> New Project... (Arquivo \> Novo Projeto...).
+
+3.  Escolha New Directory (Nova Pasta) se for um trabalho do zero.
+
+4.  Depois, escolha Quarto Project (se você já sabe que vai fazer um site, um relatório bonito, etc., com Quarto) ou New Project (se for mais genérico, só pra códigos R mesmo).
+
+5.  Dê um nome bem claro pro seu projeto (tipo "AnáliseTCC" ou "AnaliseExp").
+
+6.  Escolha onde quer que essa pasta seja criada no seu computador.
+
+7.  Clique em Create Project (Criar Projeto).
+
+### 

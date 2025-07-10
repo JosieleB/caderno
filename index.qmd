@@ -1,0 +1,13 @@
+---
+title: "Análise e Visualização de Dados em Fitopatologia"
+image: "logo.webp"
+toc: false
+about: 
+  template: jolla
+  image-shape: round
+  image-width: 18em
+---
+
+Site criado com o intuito de registrar o caderno da disciplina de pós graduação FIP 606 (Análise e Visualização de Dados em Fitopatologia).
+
+Disicplina ofericida pelo Professor Emerson M. Del Ponte durante o primeiro semestre de 2025.
