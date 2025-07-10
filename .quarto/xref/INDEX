@@ -1,5 +1,44 @@
 {
   "anova.qmd": {
     "anova.html": "70c385c3"
+  },
+  "anova1.qmd": {
+    "anova1.html": "34d98b6d"
+  },
+  "autora.qmd": {
+    "autora.html": "ff140418"
+  },
+  "carregandodados.qmd": {
+    "carregandodados.html": "38c99e5b"
+  },
+  "dps.qmd": {
+    "dps.html": "1ead365f"
+  },
+  "graficos.qmd": {
+    "graficos.html": "e232169c"
+  },
+  "index.qmd": {
+    "index.html": "10a6fe63"
+  },
+  "mapa.qmd": {
+    "mapa.html": "73d0e7d7"
+  },
+  "mm.qmd": {
+    "mm.html": "fc6066a0"
+  },
+  "pacotes.qmd": {
+    "pacotes.html": "1e5c69ef"
+  },
+  "primeiro.qmd": {
+    "primeiro.html": "0ca88c0a"
+  },
+  "regressao.qmd": {
+    "regressao.html": "153ec480"
+  },
+  "testenp.qmd": {
+    "testenp.html": "b7381357"
+  },
+  "testet.qmd": {
+    "testet.html": "eb651e70"
   }
 }
